@@ -504,8 +504,8 @@ const App = {
       }
     } else if (container && !clientId) {
       container.innerHTML = `
-        <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; background: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px dashed var(--border-subtle);">
-          Add your <strong>Google OAuth Client ID</strong> in Settings to enable direct one-click Google login, or use the quick demo profile below.
+        <div style="font-size: 0.82rem; color: var(--text-secondary); text-align: center; background: var(--bg-card); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px dashed var(--border-subtle); line-height: 1.4;">
+          Google Sign-In is waiting for <code>GOOGLE_CLIENT_ID</code> in environment variables. You can also sign in instantly with the <strong>Demo Profile</strong> below!
         </div>
       `;
     }
