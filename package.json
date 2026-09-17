@@ -1,0 +1,17 @@
+{
+  "name": "routineflow",
+  "version": "1.0.0",
+  "description": "Personal Routine Tracker website with Google Login and Turso Database",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "serverless-http": "^4.0.0"
+  }
+}

@@ -1,0 +1,18 @@
+# Environment secrets (NEVER commit this!)
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Netlify build artifacts
+.netlify/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+npm-debug.log*
