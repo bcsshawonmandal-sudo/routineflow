@@ -579,4 +579,35 @@ const App = {
 // Launch when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
+
+  // Continuously remove Netlify Drawer / Feedback badge if injected by Netlify
+  function purgeNetlifyBadge() {
+    const badgeSelectors = [
+      'netlify-drawer',
+      '[data-netlify-drawer]',
+      '#netlify-badge',
+      '.netlify-badge',
+      '[class*="netlify-drawer"]',
+      'iframe[src*="netlify"]'
+    ];
+    badgeSelectors.forEach(selector => {
+      try {
+        document.querySelectorAll(selector).forEach(el => {
+          el.style.display = 'none';
+          el.remove();
+        });
+      } catch (e) {}
+    });
+  }
+
+  purgeNetlifyBadge();
+  setTimeout(purgeNetlifyBadge, 500);
+  setTimeout(purgeNetlifyBadge, 1500);
+  setTimeout(purgeNetlifyBadge, 3000);
+
+  if (typeof MutationObserver !== 'undefined') {
+    const observer = new MutationObserver(purgeNetlifyBadge);
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
 });
+

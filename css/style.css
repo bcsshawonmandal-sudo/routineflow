@@ -2072,7 +2072,7 @@ input:checked + .toggle-slider:before {
     display: flex !important;
     align-items: center !important;
     justify-content: space-around !important;
-    z-index: 1000 !important;
+    z-index: 9999999 !important;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
   }
 
@@ -2469,5 +2469,29 @@ input:checked + .toggle-slider:before {
     padding: 0.45rem 0.65rem;
     font-size: 0.82rem;
   }
+}
+
+/* ==========================================================================
+   Hide Injected Netlify Badge & Drawer Widget
+   ========================================================================== */
+netlify-drawer,
+[data-netlify-drawer],
+[id*="netlify-drawer"],
+.netlify-badge,
+#netlify-badge,
+div[class*="netlify-drawer"],
+div[id*="netlify-drawer"],
+[data-netlify-deploy-id],
+iframe[src*="netlify"],
+div:has(> a[href*="netlify.com"]),
+div[style*="z-index"][style*="bottom"][style*="right"]:has(svg):has-text("Powered by Netlify") {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  clip: rect(0, 0, 0, 0) !important;
 }
 
