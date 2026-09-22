@@ -50,6 +50,56 @@ const RoutineManager = {
     if (syncBtn) {
       syncBtn.addEventListener('click', () => this.handleSyncToToday());
     }
+
+    // Open Export Routine Modal (from My Routine header and from Settings)
+    const exportBtn = document.getElementById('exportRoutineBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => this.openExportModal());
+    }
+
+    const settingsExportBtn = document.getElementById('settingsExportRoutineBtn');
+    if (settingsExportBtn) {
+      settingsExportBtn.addEventListener('click', () => this.openExportModal());
+    }
+
+    // Export Modal close buttons & backdrop
+    const closeExportBtn = document.getElementById('closeExportRoutineModalBtn');
+    const dismissExportBtn = document.getElementById('dismissExportRoutineModalBtn');
+    const exportModalBackdrop = document.getElementById('exportRoutineModal');
+
+    if (closeExportBtn) closeExportBtn.addEventListener('click', () => this.closeExportModal());
+    if (dismissExportBtn) dismissExportBtn.addEventListener('click', () => this.closeExportModal());
+    if (exportModalBackdrop) {
+      exportModalBackdrop.addEventListener('click', (e) => {
+        if (e.target === exportModalBackdrop) this.closeExportModal();
+      });
+    }
+
+    // Export Action Handlers
+    const copyTextBtn = document.getElementById('copyRoutineTextBtn');
+    if (copyTextBtn) {
+      copyTextBtn.addEventListener('click', () => this.copyRoutineText());
+    }
+
+    const quickCopyBtn = document.getElementById('quickCopyPreviewBtn');
+    if (quickCopyBtn) {
+      quickCopyBtn.addEventListener('click', () => this.copyRoutineText());
+    }
+
+    const downloadJsonBtn = document.getElementById('downloadRoutineJsonBtn');
+    if (downloadJsonBtn) {
+      downloadJsonBtn.addEventListener('click', () => this.downloadRoutineJSON());
+    }
+
+    const downloadTxtBtn = document.getElementById('downloadRoutineTxtBtn');
+    if (downloadTxtBtn) {
+      downloadTxtBtn.addEventListener('click', () => this.downloadRoutineTXT());
+    }
+
+    const printBtn = document.getElementById('printRoutineBtn');
+    if (printBtn) {
+      printBtn.addEventListener('click', () => this.printRoutine());
+    }
   },
 
   // Format 24-hour time "08:30" according to user preferences (12h or 24h)
@@ -337,6 +387,236 @@ const RoutineManager = {
         TodayTracker.render();
       }
     }
+  },
+
+  // Open Export Routine Modal
+  openExportModal() {
+    const template = RoutineStore.getRoutineTemplate();
+    if (!template || template.length === 0) {
+      App.showToast('Your routine template is empty. Add tasks first before exporting.', 'warning');
+      return;
+    }
+
+    const previewEl = document.getElementById('routineExportTextPreview');
+    if (previewEl) {
+      previewEl.value = this.generateRoutineText(template);
+    }
+
+    const modal = document.getElementById('exportRoutineModal');
+    if (modal) {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+  },
+
+  // Close Export Routine Modal
+  closeExportModal() {
+    const modal = document.getElementById('exportRoutineModal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  },
+
+  // Generate clean human-readable schedule text
+  generateRoutineText(template = null) {
+    const list = template || RoutineStore.getRoutineTemplate();
+    if (!list || list.length === 0) return 'No tasks found in routine schedule.';
+
+    const totalMinutes = list.reduce((acc, t) => acc + (t.durationMinutes || calculateDurationMinutes(t.startTime, t.endTime)), 0);
+    const firstTask = list[0];
+    const lastTask = list[list.length - 1];
+    const timeSpan = `${this.formatDisplayTime(firstTask.startTime)} – ${this.formatDisplayTime(lastTask.endTime)}`;
+
+    let output = `========================================\n`;
+    output += `🗓️  ROUTINEFLOW DAILY SCHEDULE\n`;
+    output += `Tasks: ${list.length} | Scheduled: ${formatDuration(totalMinutes)} | Span: ${timeSpan}\n`;
+    output += `========================================\n\n`;
+
+    list.forEach((t, i) => {
+      const dur = t.durationMinutes || calculateDurationMinutes(t.startTime, t.endTime);
+      const timeRange = `${this.formatDisplayTime(t.startTime)} - ${this.formatDisplayTime(t.endTime)} (${formatDuration(dur)})`;
+      output += `${i + 1}. ${t.name}\n`;
+      output += `   ⏰ Time: ${timeRange}\n`;
+      output += `   🏷️ Category: ${t.category || 'General'}`;
+      if (t.priority) output += ` | Priority: ${t.priority}`;
+      output += `\n`;
+      if (t.details && t.details.trim()) {
+        output += `   📝 Notes: ${t.details.trim()}\n`;
+      }
+      output += `\n`;
+    });
+
+    const dateStr = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    output += `----------------------------------------\n`;
+    output += `Generated via RoutineFlow • ${dateStr}\n`;
+    return output;
+  },
+
+  // Copy routine text summary to clipboard
+  copyRoutineText() {
+    const text = this.generateRoutineText();
+    const previewEl = document.getElementById('routineExportTextPreview');
+    const copyBtnText = document.getElementById('copyRoutineBtnText');
+
+    const indicateSuccess = () => {
+      App.showToast('Routine schedule copied to clipboard!', 'success');
+      if (copyBtnText) {
+        const orig = copyBtnText.textContent;
+        copyBtnText.textContent = '✓ Copied to Clipboard!';
+        setTimeout(() => { copyBtnText.textContent = orig; }, 2200);
+      }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(indicateSuccess).catch(() => {
+        if (previewEl) {
+          previewEl.select();
+          document.execCommand('copy');
+          indicateSuccess();
+        }
+      });
+    } else if (previewEl) {
+      previewEl.select();
+      document.execCommand('copy');
+      indicateSuccess();
+    }
+  },
+
+  // Download Routine as JSON file
+  downloadRoutineJSON() {
+    const template = RoutineStore.getRoutineTemplate();
+    if (!template || template.length === 0) {
+      App.showToast('Your routine is empty. Nothing to export.', 'warning');
+      return;
+    }
+
+    const exportData = {
+      appName: 'RoutineFlow',
+      exportType: 'routine_template',
+      version: '2.0',
+      exportedAt: new Date().toISOString(),
+      totalTasks: template.length,
+      routine: template
+    };
+
+    const dateStamp = formatDateISO(new Date());
+    const jsonStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RoutineFlow_Routine_${dateStamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    App.showToast('Routine exported as JSON file!', 'success');
+  },
+
+  // Download Routine as plain text file
+  downloadRoutineTXT() {
+    const template = RoutineStore.getRoutineTemplate();
+    if (!template || template.length === 0) {
+      App.showToast('Your routine is empty. Nothing to export.', 'warning');
+      return;
+    }
+
+    const text = this.generateRoutineText(template);
+    const dateStamp = formatDateISO(new Date());
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RoutineFlow_Routine_${dateStamp}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    App.showToast('Routine exported as TXT file!', 'success');
+  },
+
+  // Populate print sheet for printing/PDF
+  populatePrintSheet() {
+    const printContainer = document.getElementById('routinePrintSheet');
+    if (!printContainer) return;
+
+    const template = RoutineStore.getRoutineTemplate();
+    const totalMinutes = template.reduce((acc, t) => acc + (t.durationMinutes || calculateDurationMinutes(t.startTime, t.endTime)), 0);
+    const timeSpan = template.length > 0
+      ? `${this.formatDisplayTime(template[0].startTime)} – ${this.formatDisplayTime(template[template.length - 1].endTime)}`
+      : 'N/A';
+
+    const user = RoutineStore.getUserProfile ? RoutineStore.getUserProfile() : null;
+    const userName = user && user.name ? user.name : 'Daily Schedule';
+    const dateStr = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    let rowsHtml = '';
+    template.forEach((t, i) => {
+      const dur = t.durationMinutes || calculateDurationMinutes(t.startTime, t.endTime);
+      rowsHtml += `
+        <tr>
+          <td style="padding: 9px 12px; border-bottom: 1px solid #e2e8f0; font-weight: 600; white-space: nowrap;">
+            ${this.formatDisplayTime(t.startTime)} – ${this.formatDisplayTime(t.endTime)}
+          </td>
+          <td style="padding: 9px 12px; border-bottom: 1px solid #e2e8f0; color: #64748b; white-space: nowrap;">
+            ${formatDuration(dur)}
+          </td>
+          <td style="padding: 9px 12px; border-bottom: 1px solid #e2e8f0;">
+            <strong style="font-size: 0.98rem; color: #0f172a;">${this.escapeHTML(t.name)}</strong>
+            ${t.details ? `<div style="font-size: 0.84rem; color: #64748b; margin-top: 3px;">${this.escapeHTML(t.details)}</div>` : ''}
+          </td>
+          <td style="padding: 9px 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.84rem; color: #334155;">
+            ${this.escapeHTML(t.category || 'General')}
+          </td>
+          <td style="padding: 9px 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.84rem; font-weight: 600;">
+            ${this.escapeHTML(t.priority || 'Medium')}
+          </td>
+        </tr>
+      `;
+    });
+
+    printContainer.innerHTML = `
+      <div style="margin-bottom: 24px; border-bottom: 2px solid #0f172a; padding-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <h1 style="margin: 0; font-size: 1.85rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">RoutineFlow</h1>
+          <p style="margin: 4px 0 0; color: #475569; font-size: 0.95rem;">${this.escapeHTML(userName)} • ${dateStr}</p>
+        </div>
+        <div style="text-align: right; font-size: 0.88rem; color: #334155; line-height: 1.45;">
+          <div><strong>Total Tasks:</strong> ${template.length}</div>
+          <div><strong>Scheduled Duration:</strong> ${formatDuration(totalMinutes)}</div>
+          <div><strong>Day Span:</strong> ${timeSpan}</div>
+        </div>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.92rem;">
+        <thead>
+          <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
+            <th style="padding: 10px 12px; font-weight: 700; width: 18%; color: #1e293b;">Time Slot</th>
+            <th style="padding: 10px 12px; font-weight: 700; width: 12%; color: #1e293b;">Duration</th>
+            <th style="padding: 10px 12px; font-weight: 700; width: 44%; color: #1e293b;">Task & Details</th>
+            <th style="padding: 10px 12px; font-weight: 700; width: 14%; color: #1e293b;">Category</th>
+            <th style="padding: 10px 12px; font-weight: 700; width: 12%; color: #1e293b;">Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+      <div style="margin-top: 28px; font-size: 0.8rem; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+        RoutineFlow Master Schedule • Exported ${dateStr}
+      </div>
+    `;
+  },
+
+  // Print routine timetable or save to PDF
+  printRoutine() {
+    const template = RoutineStore.getRoutineTemplate();
+    if (!template || template.length === 0) {
+      App.showToast('Your routine is empty. Nothing to print.', 'warning');
+      return;
+    }
+    this.populatePrintSheet();
+    window.print();
   },
 
   escapeHTML(str) {

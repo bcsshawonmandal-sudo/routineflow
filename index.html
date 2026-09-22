@@ -326,6 +326,10 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             <span>Sync to Today</span>
           </button>
+          <button type="button" class="btn-secondary" id="exportRoutineBtn" title="Export, copy, or print routine schedule">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Export Routine</span>
+          </button>
           <button type="button" class="btn-primary" id="openAddTaskModalBtn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             <span>Add Task</span>
@@ -491,6 +495,17 @@
 
             <div class="action-item">
               <div>
+                <strong>Export Routine Schedule</strong>
+                <p class="setting-desc">Download routine JSON, copy text summary, or print a schedule sheet</p>
+              </div>
+              <button type="button" class="btn-secondary btn-sm" id="settingsExportRoutineBtn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Export Routine</span>
+              </button>
+            </div>
+
+            <div class="action-item">
+              <div>
                 <strong>Restore Default Sample Routine</strong>
                 <p class="setting-desc">Load the recommended starter routine with well-balanced tasks</p>
               </div>
@@ -638,6 +653,86 @@
       </div>
     </div>
   </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: EXPORT ROUTINE                          -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" id="exportRoutineModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="dialog" aria-modal="true" aria-labelledby="exportRoutineModalTitle">
+      <div class="modal-header">
+        <div>
+          <span class="section-tag">SCHEDULE EXPORT</span>
+          <h3 class="modal-title" id="exportRoutineModalTitle">Export Routine Schedule</h3>
+          <p class="modal-subtitle">Download your routine, copy a clean text summary, or print a schedule sheet.</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeExportRoutineModalBtn" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="modal-scroll-body" style="padding: 1.5rem 1.75rem;">
+        <!-- Export Quick Action Cards -->
+        <div class="export-options-grid">
+          <button type="button" class="export-option-card" id="copyRoutineTextBtn" title="Copy text summary to clipboard">
+            <div class="export-option-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </div>
+            <div class="export-option-text">
+              <strong id="copyRoutineBtnText">Copy to Clipboard</strong>
+              <span>Clean text summary for WhatsApp, Notes, Notion</span>
+            </div>
+          </button>
+
+          <button type="button" class="export-option-card" id="downloadRoutineJsonBtn" title="Download JSON file">
+            <div class="export-option-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </div>
+            <div class="export-option-text">
+              <strong>Download JSON</strong>
+              <span>Structured backup of routine template</span>
+            </div>
+          </button>
+
+          <button type="button" class="export-option-card" id="downloadRoutineTxtBtn" title="Download plain text file">
+            <div class="export-option-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            <div class="export-option-text">
+              <strong>Download .TXT</strong>
+              <span>Formatted plain text document</span>
+            </div>
+          </button>
+
+          <button type="button" class="export-option-card" id="printRoutineBtn" title="Print or save as PDF">
+            <div class="export-option-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            </div>
+            <div class="export-option-text">
+              <strong>Print / Save PDF</strong>
+              <span>Clean, printable timetable sheet</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Text Preview Section -->
+        <div class="export-preview-header">
+          <label for="routineExportTextPreview" class="form-label" style="margin-bottom: 0;">Schedule Summary Preview</label>
+          <button type="button" class="btn-ghost btn-sm" id="quickCopyPreviewBtn" title="Copy text preview">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy Text</span>
+          </button>
+        </div>
+        <textarea id="routineExportTextPreview" class="export-textarea" readonly></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-primary" id="dismissExportRoutineModalBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedicated Hidden Print Sheet for window.print() -->
+  <div id="routinePrintSheet" aria-hidden="true"></div>
 
   <!-- ============================================== -->
   <!-- MODAL: GOOGLE SIGN-IN                          -->
